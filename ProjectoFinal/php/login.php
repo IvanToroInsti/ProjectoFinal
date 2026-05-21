@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 require "connexio.php";
 
 $usuariNom = trim($_POST['usuari'] ?? '');
@@ -22,7 +24,10 @@ if (!password_verify($contrasenya, $usuari['contrasenya'])) {
     exit;
 }
 
+// guardar usuario en la sesión
+$_SESSION['usuari'] = $usuari['nom'];
+
 // si todo es correcto → redirigir
-header("Location: /ProjectoFinal/html/app.html");
+header("Location: /ProjectoFinal/html/app.php");
 exit;
 ?>

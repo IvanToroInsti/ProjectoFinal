@@ -1,7 +1,9 @@
 <?php
+session_start();
+
 require "connexio.php";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $nom = $_POST['nom'];
     $email = $_POST['email'];
@@ -9,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pass2 = $_POST['pass2'];
 
     // comprobar contraseñas
-    if ($pass !== $pass2) {
+    if ($pass != $pass2) {
         die("Les contrasenyes no coincideixen");
     }
 
@@ -36,7 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'email' => $email,
         'contrasenya' => $contrasenya
     ]);
+
+    // guardar usuario en la sesión
+    $_SESSION['usuari'] = $nom;
+
     // si todo es correcto → redirigir
-    header("Location: /ProjectoFinal/html/app.html");
+    header("Location: /ProjectoFinal/html/app.php");
     exit;
 }
+?>

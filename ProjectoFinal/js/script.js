@@ -85,10 +85,25 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19
 }).addTo(map);
 
+// ================= PUERTAS Y TRIBUNAS EN EL MAPA =================
+puertas.forEach(puerta => {
+  L.marker([puerta.lat, puerta.lng])
+    .addTo(map)
+    .bindPopup(`🚪 ${puerta.nom}`);
+});
+
+tribunas.forEach(tribuna => {
+  L.marker([tribuna.lat, tribuna.lng])
+    .addTo(map)
+    .bindPopup(`🏟️ ${tribuna.nom}`);
+});
+
 // ================= VARIABLES =================
 let userCoords = null;
 let userMarker = null;
 let currentTribuna = null;
+let currentPuerta = null;
+let routeInfo = document.getElementById("routeInfo");
 
 // markers
 let wcMarkers = [];
@@ -134,7 +149,10 @@ visitaToggle.addEventListener("change", updateRoute);
 // ================= ROUTE =================
 function updateRoute() {
 
-  if (!userCoords) return;
+  if (!userCoords) {
+    routeInfo.textContent = "Activa la ubicación para poder calcular la ruta.";
+    return;
+  }
 
   // VISITA
   if (visitaToggle.checked) {
@@ -145,14 +163,28 @@ function updateRoute() {
     ]);
 
     currentTribuna = null;
+    currentPuerta = null;
+
+    routeInfo.innerHTML = `
+      <b>Modo visita activado</b><br>
+      Ruta directa hasta el Circuit de Catalunya.
+    `;
+
     return;
   }
 
   const num = parseInt(entradaInput.value);
-  if (isNaN(num)) return;
+
+  if (isNaN(num) || num < 1 || num > CAPACIDAD) {
+    routeInfo.textContent = "Introduce un número de entrada válido.";
+    return;
+  }
 
   let tribunaIndex = Math.floor((num - 1) / 200);
-  if (tribunaIndex >= tribunas.length) tribunaIndex = tribunas.length - 1;
+
+  if (tribunaIndex >= tribunas.length) {
+    tribunaIndex = tribunas.length - 1;
+  }
 
   const tribuna = tribunas[tribunaIndex];
   currentTribuna = tribuna;
@@ -162,17 +194,26 @@ function updateRoute() {
 
   puertas.forEach(p => {
     const d = Math.hypot(p.lat - tribuna.lat, p.lng - tribuna.lng);
+
     if (d < min) {
       min = d;
       puerta = p;
     }
   });
 
+  currentPuerta = puerta;
+
   routingControl.setWaypoints([
     L.latLng(userCoords),
     L.latLng(puerta.lat, puerta.lng),
     L.latLng(tribuna.lat, tribuna.lng)
   ]);
+
+  routeInfo.innerHTML = `
+    <b>Entrada número:</b> ${num}<br>
+    <b>Puerta recomendada:</b> ${puerta.nom}<br>
+    <b>Tribuna asignada:</b> ${tribuna.nom}
+  `;
 }
 
 // ================= POI ROUTE =================
@@ -205,6 +246,26 @@ function addMarkers(data, icon, arr, emoji) {
       .on("click", () => routeToPOI(p));
     arr.push(m);
   });
+}
+
+function buscarMasCercano(lista, coords) {
+
+  let cercano = lista[0];
+  let distanciaMinima = Infinity;
+
+  lista.forEach(punto => {
+    const distancia = Math.hypot(
+      punto.lat - coords[0],
+      punto.lng - coords[1]
+    );
+
+    if (distancia < distanciaMinima) {
+      distanciaMinima = distancia;
+      cercano = punto;
+    }
+  });
+
+  return cercano;
 }
 
 // ================= TOGGLES =================
@@ -241,6 +302,55 @@ document.getElementById("btnCircuit").addEventListener("click", () => {
   map.setView(circuitCoords, 16);
 });
 
+document.getElementById("btnBorrarRuta").addEventListener("click", () => {
+  routingControl.setWaypoints([]);
+
+  currentTribuna = null;
+  currentPuerta = null;
+
+  routeInfo.textContent = "Ruta borrada correctamente.";
+});
+
+document.getElementById("btnWcCercano").addEventListener("click", () => {
+
+  if (!userCoords) {
+    routeInfo.textContent = "Activa la ubicación para buscar el WC más cercano.";
+    return;
+  }
+
+  const wcCercano = buscarMasCercano(baños, userCoords);
+
+  routingControl.setWaypoints([
+    L.latLng(userCoords),
+    L.latLng(wcCercano.lat, wcCercano.lng)
+  ]);
+
+  routeInfo.innerHTML = `
+    <b>WC más cercano:</b> ${wcCercano.nom}<br>
+    Se ha calculado la ruta hasta este punto.
+  `;
+});
+
+document.getElementById("btnEmergencia").addEventListener("click", () => {
+
+  if (!userCoords) {
+    routeInfo.textContent = "Activa la ubicación para usar el modo emergencia.";
+    return;
+  }
+
+  const puertaCercana = buscarMasCercano(puertas, userCoords);
+
+  routingControl.setWaypoints([
+    L.latLng(userCoords),
+    L.latLng(puertaCercana.lat, puertaCercana.lng)
+  ]);
+
+  routeInfo.innerHTML = `
+    <b>Modo emergencia activado</b><br>
+    Puerta más cercana: ${puertaCercana.nom}
+  `;
+});
+
 // ================= IDIOMAS =================
 const idiomaSelect = document.getElementById("idioma");
 const capacidadInfo = document.getElementById("capacidadInfo");
@@ -255,6 +365,9 @@ function actualizarTexto() {
   const visita = document.getElementById("visita");
   const botonCircuit = document.getElementById("btnCircuit");
   const botonUbicacion = document.getElementById("btnLocation");
+  const botonBorrarRuta = document.getElementById("btnBorrarRuta");
+  const botonWcCercano = document.getElementById("btnWcCercano");
+  const botonEmergencia = document.getElementById("btnEmergencia");
 
   const wc = document.getElementById("wc");
   const baresTxt = document.getElementById("bares");
@@ -270,6 +383,9 @@ function actualizarTexto() {
     capacidadInfo.textContent = `Capacidad: ${CAPACIDAD.toLocaleString()}`;
     botonUbicacion.textContent = "📍 Mi ubicación";
     botonCircuit.textContent = "🏁 Circuito";
+    botonBorrarRuta.textContent = "❌ Borrar ruta";
+    botonWcCercano.textContent = "🚻 WC cercano";
+    botonEmergencia.textContent = "🚨 Emergencia";
 
   } else if (i === "Catalán") {
     nav.textContent = "Navegació";
@@ -279,6 +395,9 @@ function actualizarTexto() {
     capacidadInfo.textContent = `Capacitat: ${CAPACIDAD.toLocaleString()}`;
     botonUbicacion.textContent = "📍 Mi ubicació";
     botonCircuit.textContent = "🏁 Circuit";
+    botonBorrarRuta.textContent = "❌ Esborrar ruta";
+    botonWcCercano.textContent = "🚻 WC proper";
+    botonEmergencia.textContent = "🚨 Emergència";
 
   } else {
     nav.textContent = "Navigation";
@@ -288,6 +407,9 @@ function actualizarTexto() {
     capacidadInfo.textContent = `Capacity: ${CAPACIDAD.toLocaleString()}`;
     botonUbicacion.textContent = "📍 My location";
     botonCircuit.textContent = "🏁 Circuit";
+    botonBorrarRuta.textContent = "❌ Clear route";
+    botonWcCercano.textContent = "🚻 Nearest WC";
+    botonEmergencia.textContent = "🚨 Emergency";
   }
 
   wc.textContent = i === "Inglés" ? "WC" : "WC";

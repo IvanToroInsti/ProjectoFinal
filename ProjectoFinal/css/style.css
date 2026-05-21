@@ -324,3 +324,63 @@ select:focus {
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
+/* =========================
+   NUEVAS FUNCIONALIDADES
+========================= */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logout-btn {
+  background: #E61415;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background: #b80f10;
+}
+
+.info-box {
+  margin-top: 15px;
+  background: #1a1a1a;
+  border: 1px solid #E61415;
+  border-radius: 10px;
+  padding: 12px;
+  color: white;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.btn-red {
+  background: #E61415;
+  color: white;
+}
+
+.btn-red:hover {
+  background: #b80f10;
+}
+
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .logout-btn {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .nav-buttons {
+    flex-direction: column;
+  }
+}
