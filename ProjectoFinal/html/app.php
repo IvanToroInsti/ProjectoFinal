@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['usuari'])) {
+if (!isset($_SESSION["usuari"])) {
     header("Location: /ProjectoFinal/html/index.html");
     exit;
 }
@@ -32,25 +32,50 @@ if (!isset($_SESSION['usuari'])) {
 
     <h1>Circuit de Catalunya</h1>
 
-    <div class="header-actions">
-      <div class="lang">
-        <select id="idioma">
-          <option>Castellano</option>
-          <option>Catalán</option>
-          <option>Inglés</option>
-        </select>
-      </div>
-
-      <a href="/ProjectoFinal/php/logout.php" class="logout-btn">
-        Cerrar sesión
-      </a>
+    <div class="lang">
+      <select id="idioma">
+        <option>Castellano</option>
+        <option>Catalán</option>
+        <option>Inglés</option>
+      </select>
     </div>
+
+    <a href="/ProjectoFinal/php/logout.php" class="logout-btn" id="logoutBtn">Cerrar sesión</a>
 
   </header>
 
   <!-- MAPA -->
   <div id="map"></div>
 
+  <!-- PANEL 
+  <div class="panel">
+
+    <div class="card">
+
+      <h2 class="title">Navegación</h2>
+
+      <div class="row">
+        <div class="col">
+          <label>Puerta</label>
+          <select id="puerta"></select>
+        </div>
+
+        <div class="col">
+          <label>Tribuna</label>
+          <select id="tribuna"></select>
+        </div>
+      </div>
+      <div class="nav-buttons">
+
+        <button id="btnLocation" class="btn">
+          📍 Mi ubicación
+        </button>
+
+        <button id="btnCircuit" class="btn">
+          🏁 Circuito
+        </button>
+
+      </div>-->
   <div class="panel">
 
     <div class="card">
@@ -73,7 +98,6 @@ if (!isset($_SESSION['usuari'])) {
           </div>
         </div>
       </div>
-
       <div class="nav-buttons">
 
         <button id="btnLocation" class="btn">
@@ -101,7 +125,7 @@ if (!isset($_SESSION['usuari'])) {
       </div>
 
       <div id="routeInfo" class="info-box">
-        Introduce tu número de entrada para calcular la ruta.
+        Introduce tu número de entrada o activa la ubicación.
       </div>
     </div>
 

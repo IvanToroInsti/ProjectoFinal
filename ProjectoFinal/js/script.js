@@ -85,19 +85,6 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19
 }).addTo(map);
 
-// ================= PUERTAS Y TRIBUNAS EN EL MAPA =================
-puertas.forEach(puerta => {
-  L.marker([puerta.lat, puerta.lng])
-    .addTo(map)
-    .bindPopup(`🚪 ${puerta.nom}`);
-});
-
-tribunas.forEach(tribuna => {
-  L.marker([tribuna.lat, tribuna.lng])
-    .addTo(map)
-    .bindPopup(`🏟️ ${tribuna.nom}`);
-});
-
 // ================= VARIABLES =================
 let userCoords = null;
 let userMarker = null;
@@ -150,7 +137,7 @@ visitaToggle.addEventListener("change", updateRoute);
 function updateRoute() {
 
   if (!userCoords) {
-    routeInfo.textContent = "Activa la ubicación para poder calcular la ruta.";
+    routeInfo.textContent = "Activa la ubicación para calcular la ruta.";
     return;
   }
 
@@ -165,11 +152,7 @@ function updateRoute() {
     currentTribuna = null;
     currentPuerta = null;
 
-    routeInfo.innerHTML = `
-      <b>Modo visita activado</b><br>
-      Ruta directa hasta el Circuit de Catalunya.
-    `;
-
+    routeInfo.innerHTML = "<b>Modo visita:</b><br>Ruta directa hasta el Circuit de Catalunya.";
     return;
   }
 
@@ -181,10 +164,7 @@ function updateRoute() {
   }
 
   let tribunaIndex = Math.floor((num - 1) / 200);
-
-  if (tribunaIndex >= tribunas.length) {
-    tribunaIndex = tribunas.length - 1;
-  }
+  if (tribunaIndex >= tribunas.length) tribunaIndex = tribunas.length - 1;
 
   const tribuna = tribunas[tribunaIndex];
   currentTribuna = tribuna;
@@ -194,7 +174,6 @@ function updateRoute() {
 
   puertas.forEach(p => {
     const d = Math.hypot(p.lat - tribuna.lat, p.lng - tribuna.lng);
-
     if (d < min) {
       min = d;
       puerta = p;
@@ -210,7 +189,7 @@ function updateRoute() {
   ]);
 
   routeInfo.innerHTML = `
-    <b>Entrada número:</b> ${num}<br>
+    <b>Entrada:</b> ${num}<br>
     <b>Puerta recomendada:</b> ${puerta.nom}<br>
     <b>Tribuna asignada:</b> ${tribuna.nom}
   `;
@@ -249,7 +228,6 @@ function addMarkers(data, icon, arr, emoji) {
 }
 
 function buscarMasCercano(lista, coords) {
-
   let cercano = lista[0];
   let distanciaMinima = Infinity;
 
@@ -267,6 +245,18 @@ function buscarMasCercano(lista, coords) {
 
   return cercano;
 }
+
+puertas.forEach(puerta => {
+  L.marker([puerta.lat, puerta.lng])
+    .addTo(map)
+    .bindPopup(`🚪 ${puerta.nom}`);
+});
+
+tribunas.forEach(tribuna => {
+  L.marker([tribuna.lat, tribuna.lng])
+    .addTo(map)
+    .bindPopup(`🏟️ ${tribuna.nom}`);
+});
 
 // ================= TOGGLES =================
 document.getElementById("wcToggle").addEventListener("change", e => {
@@ -304,10 +294,8 @@ document.getElementById("btnCircuit").addEventListener("click", () => {
 
 document.getElementById("btnBorrarRuta").addEventListener("click", () => {
   routingControl.setWaypoints([]);
-
   currentTribuna = null;
   currentPuerta = null;
-
   routeInfo.textContent = "Ruta borrada correctamente.";
 });
 
@@ -365,9 +353,10 @@ function actualizarTexto() {
   const visita = document.getElementById("visita");
   const botonCircuit = document.getElementById("btnCircuit");
   const botonUbicacion = document.getElementById("btnLocation");
-  const botonBorrarRuta = document.getElementById("btnBorrarRuta");
+  const botonBorrar = document.getElementById("btnBorrarRuta");
   const botonWcCercano = document.getElementById("btnWcCercano");
   const botonEmergencia = document.getElementById("btnEmergencia");
+  const logoutBtn = document.getElementById("logoutBtn");
 
   const wc = document.getElementById("wc");
   const baresTxt = document.getElementById("bares");
@@ -383,9 +372,10 @@ function actualizarTexto() {
     capacidadInfo.textContent = `Capacidad: ${CAPACIDAD.toLocaleString()}`;
     botonUbicacion.textContent = "📍 Mi ubicación";
     botonCircuit.textContent = "🏁 Circuito";
-    botonBorrarRuta.textContent = "❌ Borrar ruta";
+    botonBorrar.textContent = "❌ Borrar ruta";
     botonWcCercano.textContent = "🚻 WC cercano";
     botonEmergencia.textContent = "🚨 Emergencia";
+    logoutBtn.textContent = "Cerrar sesión";
 
   } else if (i === "Catalán") {
     nav.textContent = "Navegació";
@@ -395,9 +385,10 @@ function actualizarTexto() {
     capacidadInfo.textContent = `Capacitat: ${CAPACIDAD.toLocaleString()}`;
     botonUbicacion.textContent = "📍 Mi ubicació";
     botonCircuit.textContent = "🏁 Circuit";
-    botonBorrarRuta.textContent = "❌ Esborrar ruta";
+    botonBorrar.textContent = "❌ Esborrar ruta";
     botonWcCercano.textContent = "🚻 WC proper";
     botonEmergencia.textContent = "🚨 Emergència";
+    logoutBtn.textContent = "Tancar sessió";
 
   } else {
     nav.textContent = "Navigation";
@@ -407,9 +398,10 @@ function actualizarTexto() {
     capacidadInfo.textContent = `Capacity: ${CAPACIDAD.toLocaleString()}`;
     botonUbicacion.textContent = "📍 My location";
     botonCircuit.textContent = "🏁 Circuit";
-    botonBorrarRuta.textContent = "❌ Clear route";
+    botonBorrar.textContent = "❌ Clear route";
     botonWcCercano.textContent = "🚻 Nearest WC";
     botonEmergencia.textContent = "🚨 Emergency";
+    logoutBtn.textContent = "Log out";
   }
 
   wc.textContent = i === "Inglés" ? "WC" : "WC";
