@@ -1,36 +1,59 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 
 <body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
 
   <form
-    action="/ProjectoFinal/php/login.php"
+    action="../php/login.php"
     method="POST"
     class="bg-white w-full max-w-md sm:max-w-lg p-8 sm:p-10 rounded-2xl shadow-2xl text-center"
   >
 
-    <h1 class="text-2xl sm:text-3xl font-bold mb-6">Login</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold mb-6">
+      Login
+    </h1>
+
+    <!-- ERROR USUARIO -->
+    <p
+      id="errorUsuari"
+      class="text-red-600 text-sm mb-2 hidden"
+    >
+      Usuario incorrecto
+    </p>
 
     <input
+      id="usuari"
       type="text"
       name="usuari"
       placeholder="Usuari"
       required
-      class="w-full mb-4 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415]"
+      class="w-full mb-4 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415] outline-none transition"
     />
 
+    <!-- ERROR PASSWORD -->
+    <p
+      id="errorPass"
+      class="text-red-600 text-sm mb-2 hidden"
+    >
+      Contraseña incorrecta
+    </p>
+
     <input
+      id="pass"
       type="password"
       name="pass"
       placeholder="Contrasenya"
       required
-      class="w-full mb-6 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415]"
+      class="w-full mb-6 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415] outline-none transition"
     />
 
     <button
@@ -42,12 +65,18 @@
 
     <p class="mt-6 text-base">
       ¿No tienes cuenta?
-      <a href="CrearUsuario.html" class="text-[#E61415] font-semibold hover:underline">
+      <a
+        href="CrearUsuario.html"
+        class="text-[#E61415] font-semibold hover:underline"
+      >
         Crear usuario
       </a>
     </p>
 
   </form>
 
+  <script src="../js/login.js"></script>
+
 </body>
+
 </html>

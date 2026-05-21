@@ -1,27 +1,47 @@
 <?php
+
 session_start();
+
 require "connexio.php";
 
 $usuariNom = trim($_POST['usuari'] ?? '');
 $contrasenya = $_POST['pass'] ?? '';
 
-$stmt = $pdo->prepare("SELECT nom, contrasenya FROM usuaris WHERE nom = :usuari");
-$stmt->execute([':usuari' => $usuariNom]);
+$stmt = $pdo->prepare("
+    SELECT nom, contrasenya, rol
+    FROM usuaris
+    WHERE nom = :usuari
+");
+
+$stmt->execute([
+    ':usuari' => $usuariNom
+]);
 
 $usuari = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$usuari) {
-    echo "Usuari o contrasenya incorrectes.";
+
+    header("Location: ../html/index.html?error=usuari");
     exit;
 }
 
 if (!password_verify($contrasenya, $usuari['contrasenya'])) {
-    echo "Usuari o contrasenya incorrectes.";
+
+    header("Location: ../html/index.html?error=pass");
     exit;
 }
 
 $_SESSION['usuari'] = $usuari['nom'];
+$_SESSION['rol'] = $usuari['rol'];
 
-header("Location: /ProjectoFinal/html/app.php");
-exit;
+if ($usuari['rol'] === 'admin') {
+
+    header("Location: ../html/admin.php");
+    exit;
+
+} else {
+
+    header("Location: ../html/app.php");
+    exit;
+}
 ?>

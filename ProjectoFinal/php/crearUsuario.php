@@ -1,5 +1,4 @@
 <?php
-session_start();
 require "connexio.php";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -9,22 +8,67 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $pass = $_POST['pass'] ?? '';
     $pass2 = $_POST['pass2'] ?? '';
 
+
     if ($pass != $pass2) {
-        die("Les contrasenyes no coincideixen");
+
+        header("Location: ../html/CrearUsuario.html?error=pass");
+        exit;
     }
 
-    $sqlCheck = "SELECT id FROM usuaris WHERE email = :email";
-    $stmtCheck = $pdo->prepare($sqlCheck);
-    $stmtCheck->execute(['email' => $email]);
 
-    if ($stmtCheck->fetch()) {
-        die("Aquest email ja està registrat");
+    $sqlCheckEmail = "
+        SELECT id
+        FROM usuaris
+        WHERE email = :email
+    ";
+
+    $stmtCheckEmail = $pdo->prepare($sqlCheckEmail);
+
+    $stmtCheckEmail->execute([
+        'email' => $email
+    ]);
+
+    if ($stmtCheckEmail->fetch()) {
+
+        header("Location: ../html/CrearUsuario.html?error=email");
+        exit;
     }
+
+    $sqlCheckNom = "
+        SELECT id
+        FROM usuaris
+        WHERE nom = :nom
+    ";
+
+    $stmtCheckNom = $pdo->prepare($sqlCheckNom);
+
+    $stmtCheckNom->execute([
+        'nom' => $nom
+    ]);
+
+    if ($stmtCheckNom->fetch()) {
+
+        header("Location: ../html/CrearUsuario.html?error=nom");
+        exit;
+    }
+
 
     $contrasenya = password_hash($pass, PASSWORD_DEFAULT);
 
-    $sql = "INSERT INTO usuaris (nom, email, contrasenya)
-            VALUES (:nom, :email, :contrasenya)";
+    $sql = "
+    INSERT INTO usuaris (
+        nom,
+        email,
+        contrasenya,
+        rol
+    )
+    VALUES (
+        :nom,
+        :email,
+        :contrasenya,
+        'user'
+    )
+";
 
     $stmt = $pdo->prepare($sql);
 
@@ -36,7 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $_SESSION['usuari'] = $nom;
 
-    header("Location: /ProjectoFinal/html/app.php");
+    header("Location: ../html/app.php");
     exit;
 }
+
 ?>

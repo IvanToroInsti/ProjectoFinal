@@ -2,8 +2,8 @@
 session_start();
 
 if (!isset($_SESSION["usuari"])) {
-    header("Location: /ProjectoFinal/html/index.html");
-    exit;
+  header("Location: ../html/index.html");
+  exit;
 }
 ?>
 <!DOCTYPE html>
@@ -17,7 +17,7 @@ if (!isset($_SESSION["usuari"])) {
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
-  <link rel="stylesheet" href="/ProjectoFinal/css/style.css" />
+  <link rel="stylesheet" href="../css/style.css" />
 </head>
 
 <body>
@@ -33,53 +33,39 @@ if (!isset($_SESSION["usuari"])) {
     <h1>Circuit de Catalunya</h1>
 
     <div class="header-actions">
-      <div class="lang">
-        <select id="idioma">
-          <option>Castellano</option>
-          <option>Catalán</option>
-          <option>Inglés</option>
-        </select>
-      </div>
 
-      <a href="/ProjectoFinal/php/logout.php" class="logout-btn" id="logoutBtn">Cerrar sesión</a>
-    </div>
+  <button id="themeToggle" class="theme-btn">
+    ☀️
+  </button>
+
+  <div class="lang">
+    <select id="idioma">
+      <option>Castellano</option>
+      <option>Catalán</option>
+      <option>Inglés</option>
+    </select>
+  </div>
+
+  <a href="../php/logout.php" class="logout-btn" id="logoutBtn">
+    Cerrar sesión
+  </a>
+
+  <?php if ($_SESSION['rol'] === 'admin'): ?>
+    <a id="adminBtn" href="../html/admin.php" class="btn-admin">
+      🛠
+    </a>
+  <?php endif; ?>
+
+</div>
 
   </header>
 
   <!-- MAPA -->
   <div id="map"></div>
 
-  <!-- PANEL 
+  <!-- PANEL -->
   <div class="panel">
-
-    <div class="card">
-
-      <h2 class="title">Navegación</h2>
-
-      <div class="row">
-        <div class="col">
-          <label>Puerta</label>
-          <select id="puerta"></select>
-        </div>
-
-        <div class="col">
-          <label>Tribuna</label>
-          <select id="tribuna"></select>
-        </div>
-      </div>
-      <div class="nav-buttons">
-
-        <button id="btnLocation" class="btn">
-          📍 Mi ubicación
-        </button>
-
-        <button id="btnCircuit" class="btn">
-          🏁 Circuito
-        </button>
-
-      </div>-->
-  <div class="panel">
-
+    <!-- NAVEGACION -->
     <div class="card">
 
       <h2 class="title" id="nav">Navegación</h2>
@@ -113,7 +99,7 @@ if (!isset($_SESSION["usuari"])) {
       </div>
 
       <div class="nav-buttons">
-        <button id="btnBorrarRuta" class="btn btn-red">
+        <button id="btnBorrarRuta" class="btn">
           ❌ Borrar ruta
         </button>
 
@@ -121,7 +107,7 @@ if (!isset($_SESSION["usuari"])) {
           🚻 WC cercano
         </button>
 
-        <button id="btnEmergencia" class="btn btn-red">
+        <button id="btnEmergencia" class="btn">
           🚨 Emergencia
         </button>
       </div>
@@ -132,7 +118,7 @@ if (!isset($_SESSION["usuari"])) {
     </div>
 
 
-
+    <!-- PUNTOS DE INTERES -->
     <div class="card">
 
       <h2 class="title" id="pt">Puntos de interes</h2>
@@ -168,7 +154,7 @@ if (!isset($_SESSION["usuari"])) {
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
-  <script src="/ProjectoFinal/js/script.js"></script>
+  <script src="../js/script.js"></script>
 
 </body>
 

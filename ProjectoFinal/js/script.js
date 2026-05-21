@@ -17,7 +17,7 @@ const barIcon = L.icon({
 });
 
 const parkingIcon = L.icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828859.png",
+  iconUrl: "https://static.vecteezy.com/system/resources/previews/024/382/909/non_2x/parking-sign-symbol-icon-blue-design-transparent-background-free-png.png",
   iconSize: [28, 28],
   iconAnchor: [14, 28],
   popupAnchor: [0, -28]
@@ -45,62 +45,46 @@ const tribunaIcon = L.divIcon({
 });
 
 // ================= DATOS =================
-const puertas = [
-  { nom: "Puerta 1", lat: 41.57358414534825, lng: 2.2577796192549173 },
-  { nom: "Puerta 2", lat: 41.574337562719805, lng: 2.263736902283102 },
-  { nom: "Puerta 3", lat: 41.57045034330061, lng: 2.263384702661838 },
-  { nom: "Puerta 4", lat: 41.566554165553335, lng: 2.26015166405373 },
-  { nom: "Puerta 5", lat: 41.56582755148905, lng: 2.2584747083326744 },
-  { nom: "Puerta 6", lat: 41.56362576279445, lng: 2.251721741815354 },
-  { nom: "Puerta 7", lat: 41.56926685502898, lng: 2.2540137937396962 },
-];
+let baños = [];
+let bares = [];
+let parkings = [];
+let tiendas = [];
+let tribunas = [];
+let puertas = [];
 
-const tribunas = [
-  { nom: "Tribuna Principal", lat: 41.57007508192984, lng: 2.2616373930705573 },
-  { nom: "Tribuna A", lat: 41.564149345230845, lng: 2.254919328417029 },
-  { nom: "Tribuna L", lat: 41.56482134250079, lng: 2.253589903258085 },
-  { nom: "Tribuna F", lat: 41.56496196951934, lng: 2.257349635269684 },
-  { nom: "Tribuna E", lat: 41.56562542636767, lng: 2.257891884622491 },
-  { nom: "Tribuna K", lat: 41.566288876412436, lng: 2.2584724103923266 },
-  { nom: "Tribuna J", lat: 41.56731983562511, lng: 2.2593400093341534 },
-];
+async function cargarPOIs() {
+  const res = await fetch("../php/datos.php");
+  const data = await res.json();
 
-const baños = [
-  { nom: "WC Tribuna D", lat: 41.56901120533182, lng: 2.2608596035299 },
-  { nom: "WC Tribuna F", lat: 41.56454812007726, lng: 2.2571259687679928 },
-  { nom: "WC Tribuna E", lat: 41.56558364752653, lng: 2.2579413602483567 },
-  { nom: "WC Tribuna B", lat: 41.57242252844093, lng: 2.2594326684408466 },
-  { nom: "WC Tribuna C", lat: 41.57518356154787, lng: 2.260430450106517 },
-  { nom: "WC Tribuna G", lat: 41.57381911226953, lng: 2.2580271910064975 },
-  { nom: "WC Paddock", lat: 41.569273959210165, lng: 2.2600103117412362 },
-];
+  baños = data.filter(p => p.tipus === "wc");
+  bares = data.filter(p => p.tipus === "bar");
+  parkings = data.filter(p => p.tipus === "parking");
+  tiendas = data.filter(p => p.tipus === "tienda");
+  tribunas = data.filter(p => p.tipus === "tribuna");
+  puertas = data.filter(p => p.tipus === "puerta");
 
-const bares = [
-  { nom: "Food Truck", lat: 41.57494258882424, lng: 2.259702186917352 },
-  { nom: "Carpa bar 1", lat: 41.56750987524392, lng: 2.2599734342794604 },
-  { nom: "Carpa bar 2", lat: 41.567207781256606, lng: 2.2541858785358273 },
-  { nom: "Hot Dogs", lat: 41.565885704957374, lng: 2.254920437992722 },
-];
+  console.log("POIs cargados:", data);
+}
 
-const parkings = [
-  { nom: "Parking 1", lat: 41.57552903151843, lng: 2.2629809403204852 },
-  { nom: "Parking 2", lat: 41.57557718776761, lng: 2.264719011633892 },
-  { nom: "Parking 3", lat: 41.57247906259213, lng: 2.2654593012673803 },
-  { nom: "Parking 4", lat: 41.566410801286956, lng: 2.2612965130472613 },
-];
-
-const tiendas = [
-  { nom: "Tienda 1", lat: 41.574581951271014, lng: 2.2579598451126963 },
-  { nom: "Tienda 2", lat: 41.57057677213056, lng: 2.2571873689734034 },
-  { nom: "Tienda 3", lat: 41.568409537612425, lng: 2.258507015711361 },
-];
-
+cargarPOIs();
 // ================= MAPA =================
 const map = L.map("map").setView(circuitCoords, 15);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19
-}).addTo(map);
+const lightLayer = L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    maxZoom: 19
+  }
+);
+
+const darkLayer = L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    maxZoom: 19
+  }
+);
+
+darkLayer.addTo(map);
 
 // ================= VARIABLES =================
 let userCoords = null;
@@ -118,6 +102,9 @@ const entradaInput = document.getElementById("puerta");
 const visitaToggle = document.getElementById("visitaToggle");
 const idiomaSelect = document.getElementById("idioma");
 const capacidadInfo = document.getElementById("capacidadInfo");
+const themeToggle = document.getElementById("themeToggle");
+
+let lightMode = false;
 
 let wcMarkers = [];
 let barMarkers = [];
@@ -253,6 +240,9 @@ let routingControl = L.Routing.control({
   addWaypoints: false,
   draggableWaypoints: false,
   show: false,
+  createMarker: function () {
+    return null;
+  },
   lineOptions: { styles: [{ color: "#E61415", weight: 5 }] }
 }).addTo(map);
 
@@ -272,13 +262,36 @@ navigator.geolocation.watchPosition((pos) => {
 
 // ================= FUNCIONES DE RUTA =================
 function obtenerTribunaPorEntrada(numEntrada) {
-  const entradasPorTribuna = Math.ceil(CAPACIDAD / tribunas.length);
-  let tribunaIndex = Math.ceil(numEntrada / entradasPorTribuna) - 1;
 
-  if (tribunaIndex < 0) tribunaIndex = 0;
-  if (tribunaIndex >= tribunas.length) tribunaIndex = tribunas.length - 1;
+  if (numEntrada >= 1 && numEntrada <= 20000) {
+    return tribunas.find(t => t.nom === "Tribuna Principal");
+  }
 
-  return tribunas[tribunaIndex];
+  if (numEntrada >= 20001 && numEntrada <= 40000) {
+    return tribunas.find(t => t.nom === "Tribuna A");
+  }
+
+  if (numEntrada >= 40001 && numEntrada <= 60000) {
+    return tribunas.find(t => t.nom === "Tribuna L");
+  }
+
+  if (numEntrada >= 60001 && numEntrada <= 80000) {
+    return tribunas.find(t => t.nom === "Tribuna F");
+  }
+
+  if (numEntrada >= 80001 && numEntrada <= 100000) {
+    return tribunas.find(t => t.nom === "Tribuna E");
+  }
+
+  if (numEntrada >= 100001 && numEntrada <= 120000) {
+    return tribunas.find(t => t.nom === "Tribuna K");
+  }
+
+  if (numEntrada >= 120001 && numEntrada <= 140000) {
+    return tribunas.find(t => t.nom === "Tribuna J");
+  }
+
+  return tribunas[0];
 }
 
 function buscarMasCercano(lista, coords) {
@@ -385,7 +398,9 @@ function updateRoute() {
   lastRouteInfo = "mainRoute";
 
   mostrarMarcadoresRuta(puerta, tribuna);
-
+  console.log("Entrada:", num);
+  console.log("Tribuna:", tribuna);
+  console.log("Puerta:", puerta);
   if (userCoords) {
     routingControl.setWaypoints([
       L.latLng(userCoords),
@@ -589,6 +604,7 @@ document.getElementById("btnBorrarRuta").addEventListener("click", () => {
   currentTribuna = null;
   currentPuerta = null;
   lastRouteInfo = "cleared";
+  entradaInput.value = "";
   limpiarMarcadoresSeleccionados();
   routeInfo.textContent = t().rutaBorrada;
 });
@@ -636,7 +652,58 @@ function actualizarTexto() {
   }
 }
 
-entradaInput.addEventListener("input", updateRoute);
+// =====================
+// MODO DIA / NOCHE
+// =====================
+
+function activarModoClaro() {
+
+  document.body.classList.add("light-mode");
+
+  map.removeLayer(darkLayer);
+  lightLayer.addTo(map);
+
+  themeToggle.textContent = "🌙";
+
+  localStorage.setItem("theme", "light");
+
+  lightMode = true;
+}
+
+function activarModoOscuro() {
+
+  document.body.classList.remove("light-mode");
+
+  map.removeLayer(lightLayer);
+  darkLayer.addTo(map);
+
+  themeToggle.textContent = "☀️";
+
+  localStorage.setItem("theme", "dark");
+
+  lightMode = false;
+}
+
+themeToggle.addEventListener("click", () => {
+
+  if (lightMode) {
+    activarModoOscuro();
+  } else {
+    activarModoClaro();
+  }
+
+});
+
+// cargar tema guardado
+const savedTheme = localStorage.getItem("theme");
+
+if (savedTheme === "light") {
+  activarModoClaro();
+} else {
+  activarModoOscuro();
+}
+
+entradaInput.addEventListener("change", updateRoute);
 visitaToggle.addEventListener("change", updateRoute);
 idiomaSelect.addEventListener("change", actualizarTexto);
 actualizarTexto();
