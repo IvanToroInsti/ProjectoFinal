@@ -134,23 +134,62 @@ entradaInput.addEventListener("input", updateRoute);
 visitaToggle.addEventListener("change", updateRoute);
 
 // ================= ROUTE =================
-function updateRoute() {
+function obtenerTribunaPorEntrada(numEntrada) {
 
-  if (!userCoords) {
-    routeInfo.textContent = "Activa la ubicación para calcular la ruta.";
-    return;
+  // Repartimos todas las entradas entre las tribunas disponibles.
+  // Ejemplo: 140000 entradas / 7 tribunas = 20000 entradas por tribuna.
+  const entradasPorTribuna = Math.ceil(CAPACIDAD / tribunas.length);
+
+  let tribunaIndex = Math.ceil(numEntrada / entradasPorTribuna) - 1;
+
+  if (tribunaIndex < 0) {
+    tribunaIndex = 0;
   }
+
+  if (tribunaIndex >= tribunas.length) {
+    tribunaIndex = tribunas.length - 1;
+  }
+
+  return tribunas[tribunaIndex];
+}
+
+function obtenerPuertaPorTribuna(tribuna) {
+
+  let puertaCercana = puertas[0];
+  let distanciaMinima = Infinity;
+
+  puertas.forEach(puerta => {
+    const distancia = Math.hypot(
+      puerta.lat - tribuna.lat,
+      puerta.lng - tribuna.lng
+    );
+
+    if (distancia < distanciaMinima) {
+      distanciaMinima = distancia;
+      puertaCercana = puerta;
+    }
+  });
+
+  return puertaCercana;
+}
+
+function updateRoute() {
 
   // VISITA
   if (visitaToggle.checked) {
+
+    currentTribuna = null;
+    currentPuerta = null;
+
+    if (!userCoords) {
+      routeInfo.innerHTML = "<b>Modo visita activado.</b><br>Activa la ubicación para calcular la ruta hasta el circuito.";
+      return;
+    }
 
     routingControl.setWaypoints([
       L.latLng(userCoords),
       L.latLng(circuitCoords)
     ]);
-
-    currentTribuna = null;
-    currentPuerta = null;
 
     routeInfo.innerHTML = "<b>Modo visita:</b><br>Ruta directa hasta el Circuit de Catalunya.";
     return;
@@ -159,40 +198,43 @@ function updateRoute() {
   const num = parseInt(entradaInput.value);
 
   if (isNaN(num) || num < 1 || num > CAPACIDAD) {
-    routeInfo.textContent = "Introduce un número de entrada válido.";
+    routingControl.setWaypoints([]);
+    currentTribuna = null;
+    currentPuerta = null;
+    routeInfo.textContent = `Introduce un número de entrada válido entre 1 y ${CAPACIDAD}.`;
     return;
   }
 
-  let tribunaIndex = Math.floor((num - 1) / 200);
-  if (tribunaIndex >= tribunas.length) tribunaIndex = tribunas.length - 1;
+  // Aquí se decide la tribuna según el número escrito en el input.
+  const tribuna = obtenerTribunaPorEntrada(num);
 
-  const tribuna = tribunas[tribunaIndex];
+  // Después se decide la puerta más cercana a esa tribuna.
+  const puerta = obtenerPuertaPorTribuna(tribuna);
+
   currentTribuna = tribuna;
-
-  let puerta = puertas[0];
-  let min = Infinity;
-
-  puertas.forEach(p => {
-    const d = Math.hypot(p.lat - tribuna.lat, p.lng - tribuna.lng);
-    if (d < min) {
-      min = d;
-      puerta = p;
-    }
-  });
-
   currentPuerta = puerta;
 
-  routingControl.setWaypoints([
-    L.latLng(userCoords),
-    L.latLng(puerta.lat, puerta.lng),
-    L.latLng(tribuna.lat, tribuna.lng)
-  ]);
+  if (userCoords) {
+    routingControl.setWaypoints([
+      L.latLng(userCoords),
+      L.latLng(puerta.lat, puerta.lng),
+      L.latLng(tribuna.lat, tribuna.lng)
+    ]);
 
-  routeInfo.innerHTML = `
-    <b>Entrada:</b> ${num}<br>
-    <b>Puerta recomendada:</b> ${puerta.nom}<br>
-    <b>Tribuna asignada:</b> ${tribuna.nom}
-  `;
+    routeInfo.innerHTML = `
+      <b>Entrada:</b> ${num}<br>
+      <b>Tribuna asignada:</b> ${tribuna.nom}<br>
+      <b>Puerta recomendada:</b> ${puerta.nom}<br>
+      <b>Ruta:</b> tu ubicación → ${puerta.nom} → ${tribuna.nom}
+    `;
+  } else {
+    routeInfo.innerHTML = `
+      <b>Entrada:</b> ${num}<br>
+      <b>Tribuna asignada:</b> ${tribuna.nom}<br>
+      <b>Puerta recomendada:</b> ${puerta.nom}<br>
+      Activa la ubicación para dibujar la ruta en el mapa.
+    `;
+  }
 }
 
 // ================= POI ROUTE =================
