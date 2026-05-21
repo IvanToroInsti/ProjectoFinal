@@ -1,4 +1,3 @@
-
 const circuitCoords = [41.56919, 2.258137];
 const CAPACIDAD = 140000;
 
@@ -19,12 +18,30 @@ const barIcon = L.icon({
 
 const parkingIcon = L.icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828859.png",
-  iconSize: [28, 28]
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+  popupAnchor: [0, -28]
 });
 
 const tiendaIcon = L.icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
-  iconSize: [28, 28]
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+  popupAnchor: [0, -28]
+});
+
+const puertaIcon = L.divIcon({
+  html: "<div class='map-icon'>🚪</div>",
+  className: "custom-div-icon",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16]
+});
+
+const tribunaIcon = L.divIcon({
+  html: "<div class='map-icon'>🏟️</div>",
+  className: "custom-div-icon",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16]
 });
 
 // ================= DATOS =================
@@ -90,13 +107,144 @@ let userCoords = null;
 let userMarker = null;
 let currentTribuna = null;
 let currentPuerta = null;
-let routeInfo = document.getElementById("routeInfo");
+let lastRouteInfo = "initial";
+let lastNumEntrada = null;
+let selectedPoiMarker = null;
+let selectedDoorMarker = null;
+let selectedTribunaMarker = null;
 
-// markers
+const routeInfo = document.getElementById("routeInfo");
+const entradaInput = document.getElementById("puerta");
+const visitaToggle = document.getElementById("visitaToggle");
+const idiomaSelect = document.getElementById("idioma");
+const capacidadInfo = document.getElementById("capacidadInfo");
+
 let wcMarkers = [];
 let barMarkers = [];
 let parkingMarkers = [];
 let tiendaMarkers = [];
+
+// ================= TEXTOS =================
+const textos = {
+  Castellano: {
+    nav: "Navegación",
+    poi: "Puntos de interés",
+    entrada: "Número de entrada",
+    visita: "Voy de visita",
+    capacidad: "Capacidad",
+    miUbicacion: "📍 Mi ubicación",
+    circuito: "🏁 Circuito",
+    borrarRuta: "❌ Borrar ruta",
+    wcCercano: "🚻 WC cercano",
+    emergencia: "🚨 Emergencia",
+    cerrarSesion: "Cerrar sesión",
+    bares: "Bares",
+    parking: "Parkings",
+    tiendas: "Tiendas",
+    placeholder: "Introduce tu número de entrada o activa la ubicación.",
+    ubicacionPopup: "📍 Estás aquí",
+    rutaBorrada: "Ruta borrada correctamente.",
+    activaUbicacion: "Activa la ubicación para calcular la ruta.",
+    entradaInvalida: "Introduce un número de entrada válido entre 1 y",
+    entradaTxt: "Entrada",
+    tribunaAsignada: "Tribuna asignada",
+    puertaRecomendada: "Puerta recomendada",
+    ruta: "Ruta",
+    tuUbicacion: "tu ubicación",
+    activarParaDibujar: "Activa la ubicación para dibujar la ruta en el mapa.",
+    modoVisita: "Modo visita",
+    modoVisitaActivo: "Modo visita activado.",
+    rutaCircuito: "Ruta directa hasta el Circuit de Catalunya.",
+    wcMasCercano: "WC más cercano",
+    rutaDesdeTribunaWC: "Ruta desde la tribuna hasta el lavabo más cercano.",
+    rutaDesdeUbicacionWC: "Ruta desde tu ubicación hasta el lavabo más cercano.",
+    faltaTribuna: "Primero introduce un número de entrada para saber tu tribuna.",
+    emergenciaActiva: "Modo emergencia activado",
+    salidaCercana: "Salida más cercana",
+    rutaDesdeTribunaSalida: "Ruta desde la tribuna hasta la puerta más cercana.",
+    rutaDesdeUbicacionSalida: "Ruta desde tu ubicación hasta la puerta más cercana."
+  },
+  Catalán: {
+    nav: "Navegació",
+    poi: "Punts d'interès",
+    entrada: "Número d'entrada",
+    visita: "Vaig de visita",
+    capacidad: "Capacitat",
+    miUbicacion: "📍 La meva ubicació",
+    circuito: "🏁 Circuit",
+    borrarRuta: "❌ Esborrar ruta",
+    wcCercano: "🚻 WC proper",
+    emergencia: "🚨 Emergència",
+    cerrarSesion: "Tancar sessió",
+    bares: "Bars",
+    parking: "Pàrquings",
+    tiendas: "Botigues",
+    placeholder: "Introdueix el número d'entrada o activa la ubicació.",
+    ubicacionPopup: "📍 Ets aquí",
+    rutaBorrada: "Ruta esborrada correctament.",
+    activaUbicacion: "Activa la ubicació per calcular la ruta.",
+    entradaInvalida: "Introdueix un número d'entrada vàlid entre 1 i",
+    entradaTxt: "Entrada",
+    tribunaAsignada: "Tribuna assignada",
+    puertaRecomendada: "Porta recomanada",
+    ruta: "Ruta",
+    tuUbicacion: "la teva ubicació",
+    activarParaDibujar: "Activa la ubicació per dibuixar la ruta al mapa.",
+    modoVisita: "Mode visita",
+    modoVisitaActivo: "Mode visita activat.",
+    rutaCircuito: "Ruta directa fins al Circuit de Catalunya.",
+    wcMasCercano: "WC més proper",
+    rutaDesdeTribunaWC: "Ruta des de la tribuna fins al lavabo més proper.",
+    rutaDesdeUbicacionWC: "Ruta des de la teva ubicació fins al lavabo més proper.",
+    faltaTribuna: "Primer introdueix un número d'entrada per saber la teva tribuna.",
+    emergenciaActiva: "Mode emergència activat",
+    salidaCercana: "Sortida més propera",
+    rutaDesdeTribunaSalida: "Ruta des de la tribuna fins a la porta més propera.",
+    rutaDesdeUbicacionSalida: "Ruta des de la teva ubicació fins a la porta més propera."
+  },
+  Inglés: {
+    nav: "Navigation",
+    poi: "Points of interest",
+    entrada: "Ticket number",
+    visita: "I am visiting",
+    capacidad: "Capacity",
+    miUbicacion: "📍 My location",
+    circuito: "🏁 Circuit",
+    borrarRuta: "❌ Clear route",
+    wcCercano: "🚻 Nearest WC",
+    emergencia: "🚨 Emergency",
+    cerrarSesion: "Log out",
+    bares: "Bars",
+    parking: "Parking",
+    tiendas: "Shops",
+    placeholder: "Enter your ticket number or enable location.",
+    ubicacionPopup: "📍 You are here",
+    rutaBorrada: "Route cleared successfully.",
+    activaUbicacion: "Enable location to calculate the route.",
+    entradaInvalida: "Enter a valid ticket number between 1 and",
+    entradaTxt: "Ticket",
+    tribunaAsignada: "Assigned stand",
+    puertaRecomendada: "Recommended gate",
+    ruta: "Route",
+    tuUbicacion: "your location",
+    activarParaDibujar: "Enable location to draw the route on the map.",
+    modoVisita: "Visit mode",
+    modoVisitaActivo: "Visit mode enabled.",
+    rutaCircuito: "Direct route to the Circuit de Catalunya.",
+    wcMasCercano: "Nearest WC",
+    rutaDesdeTribunaWC: "Route from the stand to the nearest WC.",
+    rutaDesdeUbicacionWC: "Route from your location to the nearest WC.",
+    faltaTribuna: "Enter a ticket number first to know your stand.",
+    emergenciaActiva: "Emergency mode enabled",
+    salidaCercana: "Nearest exit",
+    rutaDesdeTribunaSalida: "Route from the stand to the nearest gate.",
+    rutaDesdeUbicacionSalida: "Route from your location to the nearest gate."
+  }
+};
+
+function t() {
+  return textos[idiomaSelect.value] || textos.Castellano;
+}
 
 // ================= ROUTING =================
 let routingControl = L.Routing.control({
@@ -110,163 +258,27 @@ let routingControl = L.Routing.control({
 
 // ================= GPS =================
 navigator.geolocation.watchPosition((pos) => {
-
   userCoords = [pos.coords.latitude, pos.coords.longitude];
 
   if (!userMarker) {
     userMarker = L.marker(userCoords)
       .addTo(map)
-      .bindPopup("📍 Estás aquí");
+      .bindPopup(t().ubicacionPopup);
   } else {
     userMarker.setLatLng(userCoords);
+    userMarker.bindPopup(t().ubicacionPopup);
   }
-
 });
 
-// ================= INPUT =================
-const entradaInput = document.getElementById("puerta");
-const visitaToggle = document.getElementById("visitaToggle");
-
-document.getElementById("nentradas").textContent =
-  `Número de entrada (1 - ${CAPACIDAD})`;
-
-entradaInput.addEventListener("input", updateRoute);
-visitaToggle.addEventListener("change", updateRoute);
-
-// ================= ROUTE =================
+// ================= FUNCIONES DE RUTA =================
 function obtenerTribunaPorEntrada(numEntrada) {
-
-  // Repartimos todas las entradas entre las tribunas disponibles.
-  // Ejemplo: 140000 entradas / 7 tribunas = 20000 entradas por tribuna.
   const entradasPorTribuna = Math.ceil(CAPACIDAD / tribunas.length);
-
   let tribunaIndex = Math.ceil(numEntrada / entradasPorTribuna) - 1;
 
-  if (tribunaIndex < 0) {
-    tribunaIndex = 0;
-  }
-
-  if (tribunaIndex >= tribunas.length) {
-    tribunaIndex = tribunas.length - 1;
-  }
+  if (tribunaIndex < 0) tribunaIndex = 0;
+  if (tribunaIndex >= tribunas.length) tribunaIndex = tribunas.length - 1;
 
   return tribunas[tribunaIndex];
-}
-
-function obtenerPuertaPorTribuna(tribuna) {
-
-  let puertaCercana = puertas[0];
-  let distanciaMinima = Infinity;
-
-  puertas.forEach(puerta => {
-    const distancia = Math.hypot(
-      puerta.lat - tribuna.lat,
-      puerta.lng - tribuna.lng
-    );
-
-    if (distancia < distanciaMinima) {
-      distanciaMinima = distancia;
-      puertaCercana = puerta;
-    }
-  });
-
-  return puertaCercana;
-}
-
-function updateRoute() {
-
-  // VISITA
-  if (visitaToggle.checked) {
-
-    currentTribuna = null;
-    currentPuerta = null;
-
-    if (!userCoords) {
-      routeInfo.innerHTML = "<b>Modo visita activado.</b><br>Activa la ubicación para calcular la ruta hasta el circuito.";
-      return;
-    }
-
-    routingControl.setWaypoints([
-      L.latLng(userCoords),
-      L.latLng(circuitCoords)
-    ]);
-
-    routeInfo.innerHTML = "<b>Modo visita:</b><br>Ruta directa hasta el Circuit de Catalunya.";
-    return;
-  }
-
-  const num = parseInt(entradaInput.value);
-
-  if (isNaN(num) || num < 1 || num > CAPACIDAD) {
-    routingControl.setWaypoints([]);
-    currentTribuna = null;
-    currentPuerta = null;
-    routeInfo.textContent = `Introduce un número de entrada válido entre 1 y ${CAPACIDAD}.`;
-    return;
-  }
-
-  // Aquí se decide la tribuna según el número escrito en el input.
-  const tribuna = obtenerTribunaPorEntrada(num);
-
-  // Después se decide la puerta más cercana a esa tribuna.
-  const puerta = obtenerPuertaPorTribuna(tribuna);
-
-  currentTribuna = tribuna;
-  currentPuerta = puerta;
-
-  if (userCoords) {
-    routingControl.setWaypoints([
-      L.latLng(userCoords),
-      L.latLng(puerta.lat, puerta.lng),
-      L.latLng(tribuna.lat, tribuna.lng)
-    ]);
-
-    routeInfo.innerHTML = `
-      <b>Entrada:</b> ${num}<br>
-      <b>Tribuna asignada:</b> ${tribuna.nom}<br>
-      <b>Puerta recomendada:</b> ${puerta.nom}<br>
-      <b>Ruta:</b> tu ubicación → ${puerta.nom} → ${tribuna.nom}
-    `;
-  } else {
-    routeInfo.innerHTML = `
-      <b>Entrada:</b> ${num}<br>
-      <b>Tribuna asignada:</b> ${tribuna.nom}<br>
-      <b>Puerta recomendada:</b> ${puerta.nom}<br>
-      Activa la ubicación para dibujar la ruta en el mapa.
-    `;
-  }
-}
-
-// ================= POI ROUTE =================
-function routeToPOI(poi) {
-
-  if (!userCoords) return;
-
-  const start = userCoords;
-
-  if (currentTribuna) {
-    routingControl.setWaypoints([
-      L.latLng(start),
-      L.latLng(currentTribuna.lat, currentTribuna.lng),
-      L.latLng(poi.lat, poi.lng)
-    ]);
-  } else {
-    routingControl.setWaypoints([
-      L.latLng(start),
-      L.latLng(poi.lat, poi.lng)
-    ]);
-  }
-}
-
-// ================= HELPERS =================
-function addMarkers(data, icon, arr, emoji) {
-  data.forEach(p => {
-    const m = L.marker([p.lat, p.lng], { icon })
-      .addTo(map)
-      .bindPopup(`${emoji} ${p.nom}`)
-      .on("click", () => routeToPOI(p));
-    arr.push(m);
-  });
 }
 
 function buscarMasCercano(lista, coords) {
@@ -288,17 +300,255 @@ function buscarMasCercano(lista, coords) {
   return cercano;
 }
 
-puertas.forEach(puerta => {
-  L.marker([puerta.lat, puerta.lng])
+function obtenerPuertaPorTribuna(tribuna) {
+  return buscarMasCercano(puertas, [tribuna.lat, tribuna.lng]);
+}
+
+function limpiarMarcadorTemporal() {
+  if (selectedPoiMarker) {
+    map.removeLayer(selectedPoiMarker);
+    selectedPoiMarker = null;
+  }
+}
+
+function limpiarMarcadoresSeleccionados() {
+  limpiarMarcadorTemporal();
+
+  if (selectedDoorMarker) {
+    map.removeLayer(selectedDoorMarker);
+    selectedDoorMarker = null;
+  }
+
+  if (selectedTribunaMarker) {
+    map.removeLayer(selectedTribunaMarker);
+    selectedTribunaMarker = null;
+  }
+}
+
+function mostrarMarcadoresRuta(puerta, tribuna) {
+  if (selectedDoorMarker) map.removeLayer(selectedDoorMarker);
+  if (selectedTribunaMarker) map.removeLayer(selectedTribunaMarker);
+
+  selectedDoorMarker = L.marker([puerta.lat, puerta.lng], { icon: puertaIcon })
     .addTo(map)
     .bindPopup(`🚪 ${puerta.nom}`);
-});
 
-tribunas.forEach(tribuna => {
-  L.marker([tribuna.lat, tribuna.lng])
+  selectedTribunaMarker = L.marker([tribuna.lat, tribuna.lng], { icon: tribunaIcon })
     .addTo(map)
     .bindPopup(`🏟️ ${tribuna.nom}`);
-});
+}
+
+function updateRoute() {
+  limpiarMarcadorTemporal();
+
+  if (visitaToggle.checked) {
+    currentTribuna = null;
+    currentPuerta = null;
+    lastRouteInfo = "visit";
+
+    if (selectedDoorMarker) map.removeLayer(selectedDoorMarker), selectedDoorMarker = null;
+    if (selectedTribunaMarker) map.removeLayer(selectedTribunaMarker), selectedTribunaMarker = null;
+
+    if (!userCoords) {
+      routingControl.setWaypoints([]);
+      routeInfo.innerHTML = `<b>${t().modoVisitaActivo}</b><br>${t().activaUbicacion}`;
+      return;
+    }
+
+    routingControl.setWaypoints([
+      L.latLng(userCoords),
+      L.latLng(circuitCoords)
+    ]);
+
+    routeInfo.innerHTML = `<b>${t().modoVisita}:</b><br>${t().rutaCircuito}`;
+    return;
+  }
+
+  const num = parseInt(entradaInput.value);
+  lastNumEntrada = num;
+
+  if (isNaN(num) || num < 1 || num > CAPACIDAD) {
+    routingControl.setWaypoints([]);
+    currentTribuna = null;
+    currentPuerta = null;
+    limpiarMarcadoresSeleccionados();
+    lastRouteInfo = "invalid";
+    routeInfo.textContent = `${t().entradaInvalida} ${CAPACIDAD}.`;
+    return;
+  }
+
+  const tribuna = obtenerTribunaPorEntrada(num);
+  const puerta = obtenerPuertaPorTribuna(tribuna);
+
+  currentTribuna = tribuna;
+  currentPuerta = puerta;
+  lastRouteInfo = "mainRoute";
+
+  mostrarMarcadoresRuta(puerta, tribuna);
+
+  if (userCoords) {
+    routingControl.setWaypoints([
+      L.latLng(userCoords),
+      L.latLng(puerta.lat, puerta.lng),
+      L.latLng(tribuna.lat, tribuna.lng)
+    ]);
+
+    routeInfo.innerHTML = `
+      <b>${t().entradaTxt}:</b> ${num}<br>
+      <b>${t().tribunaAsignada}:</b> ${tribuna.nom}<br>
+      <b>${t().puertaRecomendada}:</b> ${puerta.nom}<br>
+      <b>${t().ruta}:</b> ${t().tuUbicacion} → ${puerta.nom} → ${tribuna.nom}
+    `;
+  } else {
+    routingControl.setWaypoints([]);
+
+    routeInfo.innerHTML = `
+      <b>${t().entradaTxt}:</b> ${num}<br>
+      <b>${t().tribunaAsignada}:</b> ${tribuna.nom}<br>
+      <b>${t().puertaRecomendada}:</b> ${puerta.nom}<br>
+      ${t().activarParaDibujar}
+    `;
+  }
+}
+
+// ================= MARCADORES DE PUNTOS DE INTERÉS =================
+function addMarkers(data, icon, arr, emoji) {
+  data.forEach(p => {
+    const m = L.marker([p.lat, p.lng], { icon })
+      .addTo(map)
+      .bindPopup(`${emoji} ${p.nom}`)
+      .on("click", () => routeToPOI(p));
+    arr.push(m);
+  });
+}
+
+function routeToPOI(poi) {
+  limpiarMarcadorTemporal();
+
+  if (currentTribuna) {
+    routingControl.setWaypoints([
+      L.latLng(currentTribuna.lat, currentTribuna.lng),
+      L.latLng(poi.lat, poi.lng)
+    ]);
+
+    routeInfo.innerHTML = `
+      <b>${t().tribunaAsignada}:</b> ${currentTribuna.nom}<br>
+      <b>${poi.nom}</b><br>
+      ${t().ruta}: ${currentTribuna.nom} → ${poi.nom}
+    `;
+    return;
+  }
+
+  if (!userCoords) {
+    routeInfo.textContent = t().faltaTribuna;
+    return;
+  }
+
+  routingControl.setWaypoints([
+    L.latLng(userCoords),
+    L.latLng(poi.lat, poi.lng)
+  ]);
+
+  routeInfo.innerHTML = `
+    <b>${poi.nom}</b><br>
+    ${t().ruta}: ${t().tuUbicacion} → ${poi.nom}
+  `;
+}
+
+function mostrarSoloPoi(poi, icon, emoji) {
+  limpiarMarcadorTemporal();
+
+  selectedPoiMarker = L.marker([poi.lat, poi.lng], { icon })
+    .addTo(map)
+    .bindPopup(`${emoji} ${poi.nom}`)
+    .openPopup();
+}
+
+function ocultarTodosLosPuntos() {
+  wcMarkers.forEach(m => map.removeLayer(m));
+  barMarkers.forEach(m => map.removeLayer(m));
+  parkingMarkers.forEach(m => map.removeLayer(m));
+  tiendaMarkers.forEach(m => map.removeLayer(m));
+
+  wcMarkers = [];
+  barMarkers = [];
+  parkingMarkers = [];
+  tiendaMarkers = [];
+
+  document.getElementById("wcToggle").checked = false;
+  document.getElementById("barToggle").checked = false;
+  document.getElementById("parkingToggle").checked = false;
+  document.getElementById("tiendasToggle").checked = false;
+}
+
+function calcularRutaWcCercano() {
+  ocultarTodosLosPuntos();
+
+  let origen = null;
+  let textoOrigen = "";
+
+  if (currentTribuna) {
+    origen = [currentTribuna.lat, currentTribuna.lng];
+    textoOrigen = currentTribuna.nom;
+  } else if (userCoords) {
+    origen = userCoords;
+    textoOrigen = t().tuUbicacion;
+  } else {
+    routeInfo.textContent = t().faltaTribuna;
+    return;
+  }
+
+  const wcCercano = buscarMasCercano(baños, origen);
+
+  routingControl.setWaypoints([
+    L.latLng(origen),
+    L.latLng(wcCercano.lat, wcCercano.lng)
+  ]);
+
+  mostrarSoloPoi(wcCercano, wcIcon, "🚻");
+  lastRouteInfo = "wc";
+
+  routeInfo.innerHTML = `
+    <b>${t().wcMasCercano}:</b> ${wcCercano.nom}<br>
+    <b>${t().ruta}:</b> ${textoOrigen} → ${wcCercano.nom}<br>
+    ${currentTribuna ? t().rutaDesdeTribunaWC : t().rutaDesdeUbicacionWC}
+  `;
+}
+
+function calcularRutaEmergencia() {
+  ocultarTodosLosPuntos();
+
+  let origen = null;
+  let textoOrigen = "";
+
+  if (currentTribuna) {
+    origen = [currentTribuna.lat, currentTribuna.lng];
+    textoOrigen = currentTribuna.nom;
+  } else if (userCoords) {
+    origen = userCoords;
+    textoOrigen = t().tuUbicacion;
+  } else {
+    routeInfo.textContent = t().faltaTribuna;
+    return;
+  }
+
+  const puertaCercana = buscarMasCercano(puertas, origen);
+
+  routingControl.setWaypoints([
+    L.latLng(origen),
+    L.latLng(puertaCercana.lat, puertaCercana.lng)
+  ]);
+
+  mostrarSoloPoi(puertaCercana, puertaIcon, "🚪");
+  lastRouteInfo = "emergency";
+
+  routeInfo.innerHTML = `
+    <b>${t().emergenciaActiva}</b><br>
+    <b>${t().salidaCercana}:</b> ${puertaCercana.nom}<br>
+    <b>${t().ruta}:</b> ${textoOrigen} → ${puertaCercana.nom}<br>
+    ${currentTribuna ? t().rutaDesdeTribunaSalida : t().rutaDesdeUbicacionSalida}
+  `;
+}
 
 // ================= TOGGLES =================
 document.getElementById("wcToggle").addEventListener("change", e => {
@@ -338,119 +588,55 @@ document.getElementById("btnBorrarRuta").addEventListener("click", () => {
   routingControl.setWaypoints([]);
   currentTribuna = null;
   currentPuerta = null;
-  routeInfo.textContent = "Ruta borrada correctamente.";
+  lastRouteInfo = "cleared";
+  limpiarMarcadoresSeleccionados();
+  routeInfo.textContent = t().rutaBorrada;
 });
 
-document.getElementById("btnWcCercano").addEventListener("click", () => {
+document.getElementById("btnWcCercano").addEventListener("click", calcularRutaWcCercano);
 
-  if (!userCoords) {
-    routeInfo.textContent = "Activa la ubicación para buscar el WC más cercano.";
-    return;
-  }
-
-  const wcCercano = buscarMasCercano(baños, userCoords);
-
-  routingControl.setWaypoints([
-    L.latLng(userCoords),
-    L.latLng(wcCercano.lat, wcCercano.lng)
-  ]);
-
-  routeInfo.innerHTML = `
-    <b>WC más cercano:</b> ${wcCercano.nom}<br>
-    Se ha calculado la ruta hasta este punto.
-  `;
-});
-
-document.getElementById("btnEmergencia").addEventListener("click", () => {
-
-  if (!userCoords) {
-    routeInfo.textContent = "Activa la ubicación para usar el modo emergencia.";
-    return;
-  }
-
-  const puertaCercana = buscarMasCercano(puertas, userCoords);
-
-  routingControl.setWaypoints([
-    L.latLng(userCoords),
-    L.latLng(puertaCercana.lat, puertaCercana.lng)
-  ]);
-
-  routeInfo.innerHTML = `
-    <b>Modo emergencia activado</b><br>
-    Puerta más cercana: ${puertaCercana.nom}
-  `;
-});
+document.getElementById("btnEmergencia").addEventListener("click", calcularRutaEmergencia);
 
 // ================= IDIOMAS =================
-const idiomaSelect = document.getElementById("idioma");
-const capacidadInfo = document.getElementById("capacidadInfo");
-
 function actualizarTexto() {
+  const txt = t();
 
-  const i = idiomaSelect.value;
+  document.getElementById("nav").textContent = txt.nav;
+  document.getElementById("pt").textContent = txt.poi;
+  document.getElementById("nentradas").textContent = txt.entrada;
+  document.getElementById("visita").textContent = txt.visita;
+  document.getElementById("btnLocation").textContent = txt.miUbicacion;
+  document.getElementById("btnCircuit").textContent = txt.circuito;
+  document.getElementById("btnBorrarRuta").textContent = txt.borrarRuta;
+  document.getElementById("btnWcCercano").textContent = txt.wcCercano;
+  document.getElementById("btnEmergencia").textContent = txt.emergencia;
+  document.getElementById("logoutBtn").textContent = txt.cerrarSesion;
+  document.getElementById("wc").textContent = "WC";
+  document.getElementById("bares").textContent = txt.bares;
+  document.getElementById("parking").textContent = txt.parking;
+  document.getElementById("tiendas").textContent = txt.tiendas;
 
-  const nav = document.getElementById("nav");
-  const pt = document.getElementById("pt");
-  const entrada = document.getElementById("nentradas");
-  const visita = document.getElementById("visita");
-  const botonCircuit = document.getElementById("btnCircuit");
-  const botonUbicacion = document.getElementById("btnLocation");
-  const botonBorrar = document.getElementById("btnBorrarRuta");
-  const botonWcCercano = document.getElementById("btnWcCercano");
-  const botonEmergencia = document.getElementById("btnEmergencia");
-  const logoutBtn = document.getElementById("logoutBtn");
+  capacidadInfo.textContent = `${txt.capacidad}: ${CAPACIDAD.toLocaleString()}`;
+  entradaInput.placeholder = txt.entrada;
 
-  const wc = document.getElementById("wc");
-  const baresTxt = document.getElementById("bares");
-  const parking = document.getElementById("parking");
-  const tiendasTxt = document.getElementById("tiendas");
-  
-
-  if (i === "Castellano") {
-    nav.textContent = "Navegación";
-    pt.textContent = "Puntos de interés";
-    entrada.textContent = "Número de entrada";
-    visita.textContent = "Voy de visita";
-    capacidadInfo.textContent = `Capacidad: ${CAPACIDAD.toLocaleString()}`;
-    botonUbicacion.textContent = "📍 Mi ubicación";
-    botonCircuit.textContent = "🏁 Circuito";
-    botonBorrar.textContent = "❌ Borrar ruta";
-    botonWcCercano.textContent = "🚻 WC cercano";
-    botonEmergencia.textContent = "🚨 Emergencia";
-    logoutBtn.textContent = "Cerrar sesión";
-
-  } else if (i === "Catalán") {
-    nav.textContent = "Navegació";
-    pt.textContent = "Punts d'interès";
-    entrada.textContent = "Número entrada";
-    visita.textContent = "Visita";
-    capacidadInfo.textContent = `Capacitat: ${CAPACIDAD.toLocaleString()}`;
-    botonUbicacion.textContent = "📍 Mi ubicació";
-    botonCircuit.textContent = "🏁 Circuit";
-    botonBorrar.textContent = "❌ Esborrar ruta";
-    botonWcCercano.textContent = "🚻 WC proper";
-    botonEmergencia.textContent = "🚨 Emergència";
-    logoutBtn.textContent = "Tancar sessió";
-
+  if (!entradaInput.value && lastRouteInfo === "initial") {
+    routeInfo.textContent = txt.placeholder;
+  } else if (lastRouteInfo === "cleared") {
+    routeInfo.textContent = txt.rutaBorrada;
+  } else if (lastRouteInfo === "wc") {
+    calcularRutaWcCercano();
+  } else if (lastRouteInfo === "emergency") {
+    calcularRutaEmergencia();
   } else {
-    nav.textContent = "Navigation";
-    pt.textContent = "Points of interest";
-    entrada.textContent = "Ticket number";
-    visita.textContent = "Visit";
-    capacidadInfo.textContent = `Capacity: ${CAPACIDAD.toLocaleString()}`;
-    botonUbicacion.textContent = "📍 My location";
-    botonCircuit.textContent = "🏁 Circuit";
-    botonBorrar.textContent = "❌ Clear route";
-    botonWcCercano.textContent = "🚻 Nearest WC";
-    botonEmergencia.textContent = "🚨 Emergency";
-    logoutBtn.textContent = "Log out";
+    updateRoute();
   }
 
-  wc.textContent = i === "Inglés" ? "WC" : "WC";
-  baresTxt.textContent = i === "Inglés" ? "Bars" : i === "Catalán" ? "Bars" : "Bares";
-  parking.textContent = i === "Inglés" ? "Parking" : i === "Catalán" ? "Pàrquings" : "Parkings";
-  tiendasTxt.textContent = i === "Inglés" ? "Shops" : i === "Catalán" ? "Botigues" : "Tiendas";
+  if (userMarker) {
+    userMarker.bindPopup(txt.ubicacionPopup);
+  }
 }
 
+entradaInput.addEventListener("input", updateRoute);
+visitaToggle.addEventListener("change", updateRoute);
 idiomaSelect.addEventListener("change", actualizarTexto);
 actualizarTexto();

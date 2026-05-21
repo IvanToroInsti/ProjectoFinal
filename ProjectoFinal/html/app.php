@@ -32,15 +32,17 @@ if (!isset($_SESSION["usuari"])) {
 
     <h1>Circuit de Catalunya</h1>
 
-    <div class="lang">
-      <select id="idioma">
-        <option>Castellano</option>
-        <option>Catalán</option>
-        <option>Inglés</option>
-      </select>
-    </div>
+    <div class="header-actions">
+      <div class="lang">
+        <select id="idioma">
+          <option>Castellano</option>
+          <option>Catalán</option>
+          <option>Inglés</option>
+        </select>
+      </div>
 
-    <a href="/ProjectoFinal/php/logout.php" class="logout-btn" id="logoutBtn">Cerrar sesión</a>
+      <a href="/ProjectoFinal/php/logout.php" class="logout-btn" id="logoutBtn">Cerrar sesión</a>
+    </div>
 
   </header>
 
@@ -86,7 +88,7 @@ if (!isset($_SESSION["usuari"])) {
         <div class="col">
           <label id="nentradas">Numero de la teva entrada</label>
           <p id="capacidadInfo"></p>
-          <input id="puerta"></input>
+          <input id="puerta" type="number" min="1" max="140000">
         </div>
 
         <div class="row">
