@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crear usuario</title>
+  <base href="/ProjectoFinal/">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+
+  <form
+    action="/ProjectoFinal/php/crearUsuario.php"
+    method="POST"
+    class="bg-white w-full max-w-md sm:max-w-lg p-8 sm:p-10 rounded-2xl shadow-2xl text-center"
+  >
+
+    <h1 class="text-2xl sm:text-3xl font-bold mb-6">Crear usuario</h1>
+
+    <input
+      type="text"
+      name="nom"
+      placeholder="Nombre"
+      required
+      class="w-full mb-4 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415]"
+    />
+
+    <input
+      type="email"
+      name="email"
+      placeholder="Email"
+      required
+      class="w-full mb-4 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415]"
+    />
+
+    <input
+      type="password"
+      name="pass"
+      placeholder="Contraseña"
+      required
+      class="w-full mb-4 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415]"
+    />
+
+    <input
+      type="password"
+      name="pass2"
+      placeholder="Repite la contraseña"
+      required
+      class="w-full mb-6 p-3 text-lg border-2 border-[#E61415] rounded-lg focus:ring-2 focus:ring-[#E61415]"
+    />
+
+    <button
+      type="submit"
+      class="w-full bg-[#E61415] text-white py-3 text-lg rounded-lg hover:opacity-90 transition"
+    >
+      Crear cuenta
+    </button>
+
+    <p class="mt-6 text-base">
+      ¿Ya tienes cuenta?
+      <a href="/ProjectoFinal/html/index.html" class="text-[#E61415] font-semibold hover:underline">
+        Iniciar sesión
+      </a>
+    </p>
+
+  </form>
+
+</body>
+</html>
